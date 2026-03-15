@@ -1116,24 +1116,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Feature 2: 3D GAPbot Wireframe (Three.js)
+
 function init3DGAPbot() {
   const container = document.getElementById('gapbot-3d-container');
   if (!container || typeof THREE === 'undefined') return;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-  camera.position.set(10, 8, 15);
+  camera.position.set(12, 10, 18);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
 
-  // Group to hold the entire robot
   const robotGroup = new THREE.Group();
   scene.add(robotGroup);
 
-  // Modular components groups
   const bodyGroup = new THREE.Group();
   const visionGroup = new THREE.Group();
   const powerGroup = new THREE.Group();
@@ -1142,49 +1143,109 @@ function init3DGAPbot() {
   robotGroup.add(visionGroup);
   robotGroup.add(powerGroup);
 
-  // Materials
-  const materialWire = new THREE.MeshBasicMaterial({ color: 0x00ffc2, wireframe: true, transparent: true, opacity: 0.5 });
-  const materialSolid = new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 100, emissive: 0x002211 });
-  const materialAccent = new THREE.MeshBasicMaterial({ color: 0x00ffc2 });
-  const materialWarning = new THREE.MeshBasicMaterial({ color: 0xff6b35 });
+  // Advanced Materials
+  const materialSolid = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    roughness: 0.4,
+    metalness: 0.8
+  });
+  const materialArmor = new THREE.MeshStandardMaterial({
+    color: 0x2c2c2c,
+    roughness: 0.6,
+    metalness: 0.5
+  });
+  const materialWire = new THREE.MeshStandardMaterial({
+    color: 0x00ffc2,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.3
+  });
+  const materialAccent = new THREE.MeshStandardMaterial({
+    color: 0x00ffc2,
+    emissive: 0x00aa88,
+    emissiveIntensity: 0.5
+  });
+  const materialWarning = new THREE.MeshStandardMaterial({
+    color: 0xff6b35,
+    emissive: 0xaa3300,
+    emissiveIntensity: 0.8
+  });
+  const materialJoint = new THREE.MeshStandardMaterial({
+    color: 0x050505,
+    roughness: 0.9,
+    metalness: 0.1
+  });
 
   // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambientLight);
-  const dirLight = new THREE.DirectionalLight(0x00ffc2, 1);
-  dirLight.position.set(5, 10, 5);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
   scene.add(dirLight);
+  const pointLight = new THREE.PointLight(0x00ffc2, 2, 20);
+  pointLight.position.set(0, -2, 0);
+  scene.add(pointLight);
 
-  // --- Build Base Chassis ---
-  const bodyGeo = new THREE.CylinderGeometry(2, 2.5, 1, 6);
-  const body = new THREE.Mesh(bodyGeo, materialSolid);
-  const bodyWire = new THREE.Mesh(bodyGeo, materialWire);
-  bodyGroup.add(body);
-  bodyGroup.add(bodyWire);
+  // --- Build Detailed Chassis ---
+  // Main Core
+  const coreGeo = new THREE.OctahedronGeometry(2.2, 1);
+  const core = new THREE.Mesh(coreGeo, materialSolid);
+  core.scale.y = 0.5;
+  core.castShadow = true;
+  bodyGroup.add(core);
 
-  // Legs
+  // Top Armor Plate
+  const armorGeo = new THREE.CylinderGeometry(2.3, 2.5, 0.4, 8);
+  const topArmor = new THREE.Mesh(armorGeo, materialArmor);
+  topArmor.position.y = 1.2;
+  topArmor.castShadow = true;
+  bodyGroup.add(topArmor);
+
+  const bottomArmor = new THREE.Mesh(armorGeo, materialArmor);
+  bottomArmor.position.y = -1.2;
+  bottomArmor.scale.set(0.9, 1, 0.9);
+  bodyGroup.add(bottomArmor);
+
+  // Legs with detailed joints
   const numLegs = 6;
-  const radius = 2.5;
+  const radius = 2.4;
   for (let i = 0; i < numLegs; i++) {
     const angle = (i / numLegs) * Math.PI * 2;
     const legGroup = new THREE.Group();
 
-    const coxaGeo = new THREE.BoxGeometry(1.5, 0.5, 0.5);
+    // Coxa (Shoulder)
+    const coxaGeo = new THREE.BoxGeometry(1.2, 0.8, 0.8);
     const coxa = new THREE.Mesh(coxaGeo, materialSolid);
-    coxa.position.x = 0.75;
+    coxa.position.x = 0.6;
+    coxa.castShadow = true;
     legGroup.add(coxa);
 
-    const femurGeo = new THREE.BoxGeometry(2, 0.4, 0.4);
-    const femur = new THREE.Mesh(femurGeo, materialWire);
-    femur.position.x = 2.5;
+    // Shoulder Joint
+    const joint1Geo = new THREE.SphereGeometry(0.5, 16, 16);
+    const joint1 = new THREE.Mesh(joint1Geo, materialJoint);
+    joint1.position.x = 1.4;
+    legGroup.add(joint1);
+
+    // Femur (Upper Leg)
+    const femurGeo = new THREE.CylinderGeometry(0.3, 0.4, 2.5, 8);
+    const femur = new THREE.Mesh(femurGeo, materialArmor);
+    femur.position.set(2.4, 0.8, 0);
     femur.rotation.z = Math.PI / 4;
+    femur.castShadow = true;
     legGroup.add(femur);
 
-    const tibiaGeo = new THREE.BoxGeometry(2.5, 0.3, 0.3);
+    // Knee Joint
+    const joint2 = new THREE.Mesh(joint1Geo, materialJoint);
+    joint2.position.set(3.4, 1.7, 0);
+    legGroup.add(joint2);
+
+    // Tibia (Lower Leg)
+    const tibiaGeo = new THREE.CylinderGeometry(0.4, 0.1, 3.5, 8);
     const tibia = new THREE.Mesh(tibiaGeo, materialSolid);
-    tibia.position.x = 3.5;
-    tibia.position.y = -1.5;
-    tibia.rotation.z = -Math.PI / 3;
+    tibia.position.set(4.2, 0.2, 0);
+    tibia.rotation.z = -Math.PI / 6;
+    tibia.castShadow = true;
     legGroup.add(tibia);
 
     legGroup.position.x = Math.cos(angle) * radius;
@@ -1196,47 +1257,69 @@ function init3DGAPbot() {
   // --- Build Modules ---
 
   // Vision: Standard (RGB)
-  const visionStandard = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1.5), materialSolid);
-  visionStandard.position.set(1.5, 0.75, 0);
-  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.1, 16), materialAccent);
-  lens.rotation.z = Math.PI / 2;
-  lens.position.set(0.5, 0, 0);
-  visionStandard.add(lens);
+  const visionStandard = new THREE.Group();
+  const headGeo = new THREE.BoxGeometry(1.2, 0.8, 1.4);
+  const head = new THREE.Mesh(headGeo, materialArmor);
+  visionStandard.add(head);
+  const lens1 = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.2, 16), materialAccent);
+  lens1.rotation.z = Math.PI / 2;
+  lens1.position.set(0.6, 0.1, 0.3);
+  const lens2 = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.2, 16), materialAccent);
+  lens2.rotation.z = Math.PI / 2;
+  lens2.position.set(0.6, 0.1, -0.3);
+  visionStandard.add(lens1);
+  visionStandard.add(lens2);
+  visionStandard.position.set(2.0, 1.8, 0);
   visionGroup.add(visionStandard);
 
   // Vision: LiDAR
-  const visionLidar = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.8, 16), materialSolid);
-  visionLidar.position.set(0, 1, 0);
-  const lidarScanner = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16), materialWarning);
-  lidarScanner.position.y = 0.5;
+  const visionLidar = new THREE.Group();
+  const lidarBaseGeo = new THREE.CylinderGeometry(0.7, 0.8, 0.5, 16);
+  const lidarBase = new THREE.Mesh(lidarBaseGeo, materialSolid);
+  visionLidar.add(lidarBase);
+  const lidarScannerGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16);
+  const lidarScanner = new THREE.Mesh(lidarScannerGeo, materialWarning);
+  lidarScanner.position.y = 0.45;
   visionLidar.add(lidarScanner);
+  visionLidar.position.set(0, 1.8, 0);
   visionLidar.visible = false;
   visionGroup.add(visionLidar);
 
   // Vision: Multispectral
   const visionMulti = new THREE.Group();
-  const multiBox = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 1.2), materialSolid);
+  const multiBox = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.7, 1.4), materialArmor);
   visionMulti.add(multiBox);
-  for(let i=-1; i<=1; i+=2) {
-    const l = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16), materialAccent);
-    l.rotation.z = Math.PI/2;
-    l.position.set(0.6, 0, i*0.3);
-    visionMulti.add(l);
+  for(let i=-1; i<=1; i++) {
+    for(let j=-1; j<=1; j+=2) {
+      if(i===0 && j===0) continue;
+      const l = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 16), materialAccent);
+      l.rotation.z = Math.PI/2;
+      l.position.set(0.7, i*0.15, j*0.3);
+      visionMulti.add(l);
+    }
   }
-  visionMulti.position.set(1.5, 0.8, 0);
+  visionMulti.position.set(1.8, 1.8, 0);
   visionMulti.visible = false;
   visionGroup.add(visionMulti);
 
   // Power: Solar Wings
   const solarWings = new THREE.Group();
-  const wingGeo = new THREE.BoxGeometry(3, 0.1, 2);
-  const wingMat = new THREE.MeshBasicMaterial({color: 0x004488, wireframe: true});
+  const wingGeo = new THREE.BoxGeometry(4, 0.1, 2.5);
+  const wingMat = new THREE.MeshStandardMaterial({color: 0x002244, roughness: 0.2, metalness: 0.9});
+  const gridTex = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 2.3), new THREE.MeshBasicMaterial({color: 0x0088ff, wireframe: true}));
+  gridTex.rotation.x = -Math.PI / 2;
+  gridTex.position.y = 0.06;
+
   const leftWing = new THREE.Mesh(wingGeo, wingMat);
-  leftWing.position.set(0, 1.5, -3);
-  leftWing.rotation.x = Math.PI / 6;
+  leftWing.add(gridTex.clone());
+  leftWing.position.set(0, 2.0, -3.5);
+  leftWing.rotation.x = Math.PI / 8;
+
   const rightWing = new THREE.Mesh(wingGeo, wingMat);
-  rightWing.position.set(0, 1.5, 3);
-  rightWing.rotation.x = -Math.PI / 6;
+  rightWing.add(gridTex.clone());
+  rightWing.position.set(0, 2.0, 3.5);
+  rightWing.rotation.x = -Math.PI / 8;
+
   solarWings.add(leftWing);
   solarWings.add(rightWing);
   solarWings.visible = false;
@@ -1260,8 +1343,6 @@ function init3DGAPbot() {
       };
       targetRotation.y += deltaMove.x * 0.01;
       targetRotation.x += deltaMove.y * 0.01;
-
-      // Limit vertical rotation
       targetRotation.x = Math.max(-Math.PI/4, Math.min(Math.PI/4, targetRotation.x));
     }
     previousMousePosition = { x: e.offsetX, y: e.offsetY };
@@ -1275,7 +1356,7 @@ function init3DGAPbot() {
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     camera.position.z += e.deltaY * 0.01;
-    camera.position.z = Math.max(5, Math.min(30, camera.position.z));
+    camera.position.z = Math.max(8, Math.min(30, camera.position.z));
   }, { passive: false });
 
   // Config UI Logic
@@ -1288,19 +1369,16 @@ function init3DGAPbot() {
 
   configBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      // Handle UI toggle
       const module = btn.dataset.module;
       const type = btn.dataset.type;
 
       document.querySelectorAll(`.config-btn[data-module="${module}"]`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      // Handle 3D Updates & Stats
       if (module === 'vision') {
         visionStandard.visible = (type === 'standard');
         visionMulti.visible = (type === 'multispectral');
         visionLidar.visible = (type === 'lidar');
-
         stats.proc.textContent = type === 'lidar' ? '95%' : (type === 'multispectral' ? '90%' : '85%');
       }
       else if (module === 'power') {
@@ -1308,14 +1386,13 @@ function init3DGAPbot() {
         stats.energy.textContent = type === 'solar' ? '120% (MPPT)' : '90%';
       }
       else if (module === 'armor') {
-        materialSolid.wireframe = (type === 'light');
+        topArmor.material = type === 'light' ? materialWire : materialArmor;
+        bottomArmor.material = type === 'light' ? materialWire : materialArmor;
         stats.weight.textContent = type === 'heavy' ? '45% (Slow)' : '75% (Agile)';
       }
 
-      // Flash effect on update
       robotGroup.scale.set(1.05, 1.05, 1.05);
       setTimeout(() => robotGroup.scale.set(1, 1, 1), 100);
-      if(window.plausible) window.plausible('Configurator Used', {props: {module, type}});
     });
   });
 
@@ -1324,29 +1401,33 @@ function init3DGAPbot() {
   function animate() {
     requestAnimationFrame(animate);
 
-    // Smooth rotation interpolation
     robotGroup.rotation.y += (targetRotation.y - robotGroup.rotation.y) * 0.1;
     robotGroup.rotation.x += (targetRotation.x - robotGroup.rotation.x) * 0.1;
 
-    // Auto idle rotation if not dragged
     if(!isDragging) {
       targetRotation.y += 0.002;
     }
 
-    // Walking animation
     time += 0.05;
     let legIndex = 0;
     bodyGroup.children.forEach((child) => {
-      if (child.type === 'Group') { // It's a leg
+      if (child.type === 'Group') {
         const phase = (legIndex % 2 === 0) ? 0 : Math.PI;
-        child.position.y = Math.sin(time + phase) * 0.2;
+
+        // Detailed walking kinematics simulation
+        const lift = Math.sin(time + phase);
+        const stride = Math.cos(time + phase);
+
+        child.position.y = Math.max(0, lift * 0.5);
+        child.position.x = Math.cos(-legIndex * Math.PI/3) * (2.4 + stride * 0.3);
+        child.position.z = Math.sin(-legIndex * Math.PI/3) * (2.4 + stride * 0.3);
+
         legIndex++;
       }
     });
 
-    // Spin LiDAR
     if(visionLidar.visible) {
-      lidarScanner.rotation.y += 0.2;
+      visionGroup.children[1].children[1].rotation.y += 0.2;
     }
 
     renderer.render(scene, camera);
@@ -1360,6 +1441,7 @@ function init3DGAPbot() {
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
 }
+
 
 function initScrollAnimations() {
   if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
@@ -1433,19 +1515,27 @@ function initScrollAnimations() {
 }
 
 // Feature 3: Code as Architecture Hologram
+
 class HologramInteractive {
   constructor() {
     this.container = document.querySelector('.hologram-container');
-    this.scene = document.querySelector('.holo-scene');
-    this.nodes = document.querySelectorAll('.holo-node');
     this.overlay = document.getElementById('holo-code-overlay');
     this.filename = document.getElementById('holo-filename');
     this.codeContent = document.getElementById('holo-code-content');
 
-    if (!this.container || !this.scene) return;
+    if (!this.container || typeof THREE === 'undefined') return;
+
+    // Clear old HTML nodes
+    const sceneDiv = document.querySelector('.holo-scene');
+    if (sceneDiv) sceneDiv.innerHTML = '';
+
+    // Remove background grid from HTML since we will render it in WebGL
+    const gridBg = this.container.querySelector('div[style*="background-image: linear-gradient"]');
+    if (gridBg) gridBg.style.display = 'none';
 
     this.codeSnippets = {
       'pump': {
+        name: 'Irrigation Pump',
         file: 'irrigation_agent.py',
         code: `def analyze_soil_moisture(sensor_data):
     moisture = model.predict(sensor_data)
@@ -1455,17 +1545,18 @@ class HologramInteractive {
     return status.OK`
       },
       'sensor': {
+        name: 'Edge Sensor Hub',
         file: 'edge_hub.cpp',
         code: `void processTelemetry() {
     auto data = readSensors();
     if(anomalyDetected(data)) {
-        // EU AI Act Compliant logging
         XAI_Logger::explain(data, "Anomaly Triggered");
         triggerSwarmAlert(data);
     }
 }`
       },
       'solar': {
+        name: 'Solar MPPT Array',
         file: 'mppt_tracker.rs',
         code: `fn optimize_mppt(voltage: f32, current: f32) -> Result<(), Error> {
     let power = voltage * current;
@@ -1478,56 +1569,203 @@ class HologramInteractive {
       }
     };
 
-    this.init();
+    this.initWebGL();
+    this.initInteraction();
   }
 
-  init() {
-    // Parallax effect on mouse move
-    this.container.addEventListener('mousemove', (e) => {
-      const rect = this.container.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
+  initWebGL() {
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(45, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+    this.camera.position.set(0, 150, 300);
+    this.camera.lookAt(0, 0, 0);
 
-      this.scene.style.transform = `rotateY(${x * 15}deg) rotateX(${-y * 15}deg)`;
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+
+    // Style the canvas
+    this.renderer.domElement.style.position = 'absolute';
+    this.renderer.domElement.style.top = '0';
+    this.renderer.domElement.style.left = '0';
+    this.renderer.domElement.style.zIndex = '1';
+
+    // Create a wrapper for WebGL canvas
+    const webglWrapper = document.createElement('div');
+    webglWrapper.style.position = 'absolute';
+    webglWrapper.style.width = '100%';
+    webglWrapper.style.height = '100%';
+    webglWrapper.style.top = '0';
+    webglWrapper.style.left = '0';
+    webglWrapper.style.pointerEvents = 'none'; // Let mouse events pass to Raycaster
+    this.container.appendChild(webglWrapper);
+    webglWrapper.appendChild(this.renderer.domElement);
+
+    // Grid Helper to simulate the hologram floor
+    const gridHelper = new THREE.GridHelper(400, 40, 0x00ffc2, 0x004433);
+    gridHelper.position.y = -20;
+    this.scene.add(gridHelper);
+
+    // Glowing Particles
+    const particleCount = 200;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      positions[i*3] = (Math.random() - 0.5) * 400;
+      positions[i*3+1] = Math.random() * 100 - 20;
+      positions[i*3+2] = (Math.random() - 0.5) * 400;
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({ color: 0x00ffc2, size: 2, transparent: true, opacity: 0.5 });
+    this.particles = new THREE.Points(geometry, material);
+    this.scene.add(this.particles);
+
+    this.nodes = [];
+    this.createNode('pump', -100, 20, 50, new THREE.CylinderGeometry(15, 15, 30, 16));
+    this.createNode('sensor', 50, 10, -80, new THREE.BoxGeometry(20, 20, 20));
+    this.createNode('solar', 80, 40, 60, new THREE.PlaneGeometry(40, 40));
+
+    // Animation Loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      this.particles.rotation.y += 0.001;
+
+      // Animate Nodes
+      this.nodes.forEach(node => {
+        node.mesh.rotation.y += 0.01;
+        if(node.mesh.geometry.type === 'PlaneGeometry') {
+          node.mesh.rotation.x = -Math.PI / 2 + Math.sin(Date.now()*0.001)*0.2;
+        } else {
+          node.mesh.position.y = node.baseY + Math.sin(Date.now() * 0.002 + node.mesh.position.x) * 5;
+        }
+      });
+
+      this.renderer.render(this.scene, this.camera);
+    };
+    animate();
+
+    window.addEventListener('resize', () => {
+      this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    });
+  }
+
+  createNode(id, x, y, z, geometry) {
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x00ffc2,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.8
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+
+    // Rotate Plane
+    if (geometry.type === 'PlaneGeometry') {
+      mesh.rotation.x = -Math.PI / 2;
+    }
+
+    // Add glowing core
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2 });
+    const core = new THREE.Mesh(geometry, coreMat);
+    core.scale.set(0.8, 0.8, 0.8);
+    mesh.add(core);
+
+    mesh.userData = { id: id };
+    this.scene.add(mesh);
+    this.nodes.push({ mesh: mesh, baseY: y });
+
+    // HTML Label
+    const label = document.createElement('div');
+    label.className = 'node-label';
+    label.textContent = this.codeSnippets[id].name;
+    label.style.position = 'absolute';
+    label.style.pointerEvents = 'none';
+    label.style.zIndex = '10';
+    this.container.appendChild(label);
+
+    mesh.userData.label = label;
+  }
+
+  initInteraction() {
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+
+    this.container.addEventListener('mousemove', (event) => {
+      const rect = this.container.getBoundingClientRect();
+      this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      // Parallax camera
+      this.camera.position.x += (this.mouse.x * 50 - this.camera.position.x) * 0.05;
+      this.camera.position.y += (150 + this.mouse.y * 20 - this.camera.position.y) * 0.05;
+      this.camera.lookAt(0, 0, 0);
+
+      // Raycasting
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      const meshes = this.nodes.map(n => n.mesh);
+      const intersects = this.raycaster.intersectObjects(meshes);
+
+      // Reset styles
+      meshes.forEach(m => {
+        m.material.color.setHex(0x00ffc2);
+        m.material.opacity = 0.8;
+      });
+      this.overlay.style.opacity = '0';
+      clearInterval(this.typeInterval);
+
+      if (intersects.length > 0) {
+        this.container.style.cursor = 'pointer';
+        const hovered = intersects[0].object;
+
+        // Ensure we get the main mesh and not the core
+        const mainMesh = hovered.userData.id ? hovered : hovered.parent;
+
+        if (mainMesh && mainMesh.userData.id) {
+            mainMesh.material.color.setHex(0xffffff);
+            mainMesh.material.opacity = 1.0;
+
+            const id = mainMesh.userData.id;
+            const snippet = this.codeSnippets[id];
+
+            this.filename.textContent = snippet.file;
+            this.codeContent.textContent = '';
+            this.overlay.style.opacity = '1';
+
+            let i = 0;
+            const text = snippet.code;
+            this.typeInterval = setInterval(() => {
+            this.codeContent.textContent += text.charAt(i);
+            i++;
+            if(i >= text.length) clearInterval(this.typeInterval);
+            }, 15);
+
+            if(window.plausible) window.plausible('Hologram Interacted', {props: {node: id}});
+        }
+      } else {
+        this.container.style.cursor = 'default';
+      }
+
+      // Update Labels positions
+      this.nodes.forEach(n => {
+        const pos = n.mesh.position.clone();
+        pos.project(this.camera);
+
+        const x = (pos.x * .5 + .5) * rect.width;
+        const y = (pos.y * -.5 + .5) * rect.height;
+
+        n.mesh.userData.label.style.left = `${x - 40}px`;
+        n.mesh.userData.label.style.top = `${y + 20}px`;
+      });
     });
 
     this.container.addEventListener('mouseleave', () => {
-      this.scene.style.transform = 'rotateY(0deg) rotateX(0deg)';
       this.overlay.style.opacity = '0';
-    });
-
-    // Node interactions
-    this.nodes.forEach(node => {
-      node.addEventListener('mouseenter', () => {
-        const target = node.dataset.target;
-        const snippet = this.codeSnippets[target];
-
-        this.filename.textContent = snippet.file;
-        this.codeContent.textContent = '';
-        this.overlay.style.opacity = '1';
-
-        // Typing effect
-        let i = 0;
-        const text = snippet.code;
-        this.typeInterval = setInterval(() => {
-          this.codeContent.textContent += text.charAt(i);
-          i++;
-          if(i >= text.length) clearInterval(this.typeInterval);
-        }, 15);
-
-        if(window.plausible) window.plausible('Hologram Interacted', {props: {node: target}});
-      });
-
-      node.addEventListener('mouseleave', () => {
-        clearInterval(this.typeInterval);
-      });
+      clearInterval(this.typeInterval);
     });
   }
 }
 
-// Instantiate it in the DOMContentLoaded
 
-// Feature 4: Reactive Web Audio Soundscape
 class CoraxAudio {
   constructor() {
     this.context = null;
