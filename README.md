@@ -12,7 +12,7 @@
   <p align="center">
     <a href="https://pellenybe.github.io"><img src="https://img.shields.io/badge/Live_Showcase-00ffcc?style=for-the-badge&logo=vercel&logoColor=black" alt="Live Site"></a>
     <a href="https://coraxcolab.com"><img src="https://img.shields.io/badge/Corax_CoLAB_Official-181717?style=for-the-badge&logo=googlechrome&logoColor=00ffcc" alt="Corax CoLAB"></a>
-    <a href="https://cryptop.coraxcolab.com"><img src="https://img.shields.io/badge/CryptoP_Trading-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white" alt="CryptoP"></a>
+    <a href="https://cryptop.coraxcolab.com"><img src="https://img.shields.io/badge/Crypto_P's_Crypto_Circus-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white" alt="Crypto P's Crypto Circus"></a>
     <a href="https://github.com/PelleNybe"><img src="https://img.shields.io/badge/GitHub-Pelle_Nyberg-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
     <a href="https://www.linkedin.com/in/pellenyberg/"><img src="https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"></a>
   </p>
@@ -128,7 +128,7 @@ We've recently shipped massive updates to ensure optimal performance, accessibil
 
 Pelle Nyberg is the driving force and visionary behind **Corax CoLAB**. With profound expertise spanning algorithmic trading, machine learning, and hardware robotics, Pelle builds production-ready applications that seamlessly combine AI-driven automation with Web3 infrastructure. He is the architect of the **GAP Platform** and the **GAPbot** hexapod, bridging the gap between digital intelligence and biological reality.
 
-🔥 **Featured Project:** Explore Pelle's cutting-edge AI-assisted trading strategy platform, **[CryptoP](https://cryptop.coraxcolab.com)**, designed for next-gen algorithmic trading, arbitrage scanning, and AI market sentiment analysis.
+🔥 **Featured Project:** Explore Pelle's cutting-edge AI-assisted trading strategy platform, **[Crypto P's Crypto Circus](https://cryptop.coraxcolab.com)**, designed for next-gen algorithmic trading, arbitrage scanning, and AI market sentiment analysis.
 
 ---
 
