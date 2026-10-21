@@ -3,3 +3,4 @@
 - Updated e2e tests to pass with the new page title.
 - Improved Frontend Performance and Accessibility (added requestAnimationFrame, event delegation, aria attributes, skip to content links, proper alt texts).
 - Fixed excessively long empty spaces between modules by removing explicit hardcoded inline padding and margin on section tags in index.html, and adjusted the global section padding in styles.css.
+- Overhauled the site design to a modern, stylish, clean developer portfolio, stripping out the overly futuristic "cyber" aesthetic using the Stitch UI generation tool.
