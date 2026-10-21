@@ -1,0 +1,9 @@
+ INFO  Accepting connections at http://localhost:8000
+ HTTP  10/21/2026 11:42:54 AM ::1 GET /
+ HTTP  10/21/2026 11:42:54 AM ::1 Returned 200 in 57 ms
+ HTTP  10/21/2026 11:42:54 AM ::1 GET /styles.css
+ HTTP  10/21/2026 11:42:54 AM ::1 Returned 200 in 5 ms
+ HTTP  10/21/2026 11:42:54 AM ::1 GET /app.js
+ HTTP  10/21/2026 11:42:54 AM ::1 Returned 200 in 8 ms
+
+ INFO  Gracefully shutting down. Please wait...
